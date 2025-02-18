@@ -32,7 +32,7 @@ def process_mps_assessment(uploaded_file):
                 model="gpt-4",
                 messages=[{"role": "system", "content": "You are an MPS assessment expert."},
                           {"role": "user", "content": prompt}]
-            )
+
 
             assessments.append(response["choices"][0]["message"]["content"])
 
