@@ -3,8 +3,8 @@ import pandas as pd
 import openai
 import os
 
-# Set up OpenAI API Key (Replace 'your-api-key' with your actual API key)
-openai.api_key = "your-api-key"
+# Retrieve OpenAI API Key securely from Streamlit Secrets
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Function to process the uploaded Excel file and generate AI-powered MPS assessment
 def process_mps_assessment(uploaded_file):
@@ -34,7 +34,7 @@ def process_mps_assessment(uploaded_file):
         for index, row in df.iterrows():
             st.write(f"⚙ Processing device {index + 1} of {len(df)}: {row['Model']}...")
 
-            # Correctly formatted f-string with triple quotes
+            # AI prompt for MPS analysis
             prompt = f"""Provide an MPS assessment for the following device:
             - **Manufacturer**: {row['Manufacturer']}
             - **Model**: {row['Model']}
@@ -56,7 +56,7 @@ def process_mps_assessment(uploaded_file):
 
             Based on the provided data, analyze the device’s efficiency, cost implications, security risks, and recommend if the device should be retained, upgraded, or replaced."""
 
-            response = openai.chat.completions.create(
+            response = openai.ChatCompletion.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are an expert in managed print services."},
@@ -65,7 +65,7 @@ def process_mps_assessment(uploaded_file):
             )
 
             # Debugging AI Response
-            ai_response = response.choices[0].message.content
+            ai_response = response["choices"][0]["message"]["content"]
             st.write(f"📝 AI Response for {row['Model']}: {ai_response}")
 
             assessments.append(ai_response)
