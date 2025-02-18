@@ -34,8 +34,8 @@ def process_mps_assessment(uploaded_file):
         for index, row in df.iterrows():
             st.write(f"⚙ Processing device {index + 1} of {len(df)}: {row['Model']}...")
 
-            prompt = f"""
-            Provide an MPS assessment for the following device:
+            # Correctly formatted f-string with triple quotes
+            prompt = f"""Provide an MPS assessment for the following device:
             - **Manufacturer**: {row['Manufacturer']}
             - **Model**: {row['Model']}
             - **Serial Number**: {row['Serial Number']}
@@ -54,5 +54,59 @@ def process_mps_assessment(uploaded_file):
             - **Printer Status**: {row['Printer Status']}
             - **Firmware Versions**: {row['Firmware Version 1']}, {row['Firmware Version 2']}, {row['Firmware Version 3']}, {row['Firmware Version 4']}
 
-            Based on the provided data, analyze the device’s efficiency, cost implications, security risks, and recommend if the device should be retained, upgraded, or replaced.
-        
+            Based on the provided data, analyze the device’s efficiency, cost implications, security risks, and recommend if the device should be retained, upgraded, or replaced."""
+
+            response = openai.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an expert in managed print services."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            # Debugging AI Response
+            ai_response = response.choices[0].message.content
+            st.write(f"📝 AI Response for {row['Model']}: {ai_response}")
+
+            assessments.append(ai_response)
+
+        # Add AI-generated assessments to the DataFrame
+        df["AI Assessment"] = assessments
+
+        # Save the processed file
+        output_path = "/tmp/MPS_Assessment_Results.xlsx"
+        df.to_excel(output_path, index=False)
+
+        # Confirm where the file was saved
+        st.write(f"📂 Report saved at: {output_path}")
+
+        return output_path
+
+    except Exception as e:
+        st.error(f"🚨 Error processing file: {e}")
+        return None
+
+# Streamlit UI
+st.title("🖨 AI-Powered MPS Assessment Tool")
+st.write("📤 Upload your FM Audit/NMAP Excel file and receive an AI-generated MPS assessment instantly.")
+
+uploaded_file = st.file_uploader("📂 Upload Excel File", type=["xlsx"])
+
+if uploaded_file:
+    st.write("⚙ Processing...")
+
+    # Process the file
+    output_file = process_mps_assessment(uploaded_file)
+
+    # Check if the file exists before enabling download
+    if output_file and os.path.exists(output_file):
+        st.success(f"✅ Report successfully saved: {output_file}")
+        with open(output_file, "rb") as f:
+            st.download_button(
+                label="📥 Download AI-Powered MPS Report",
+                data=f,
+                file_name="MPS_Assessment_Results.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+    else:
+        st.error("🚨 Error: The report could not be generated. Please check the processing function.")
