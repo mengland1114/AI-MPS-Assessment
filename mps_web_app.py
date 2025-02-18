@@ -3,12 +3,19 @@ import pandas as pd
 import openai
 import os
 
-# Set up OpenAI API Key (Replace 'your-api-key' with your actual API key)
+# Set Streamlit file size limit to 20KB
+st.set_option("server.maxUploadSize", 20)  # Set file size limit to 20KB
+
+# Set up OpenAI API Key
 openai.api_key = "your-api-key"
 
 # Function to process the uploaded Excel file
 def process_mps_assessment(uploaded_file):
     try:
+        # Check file size before processing
+        if uploaded_file.size > 20 * 1024:  # Convert KB to Bytes
+            return "Error: File size exceeds 20KB limit."
+
         # Load the Excel file
         df = pd.read_excel(uploaded_file)
 
@@ -55,24 +62,28 @@ def process_mps_assessment(uploaded_file):
 
 # Streamlit UI
 st.title("AI-Powered MPS Assessment Tool")
-st.write("Upload your FM Audit/NMAP Excel file and receive an AI-generated MPS assessment instantly.")
+st.write("Upload your FM Audit/NMAP Excel file (Max: 20KB) and receive an AI-generated MPS assessment instantly.")
 
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 
 if uploaded_file:
-    st.write("Processing...")
-
-    # Process the file
-    output_file = process_mps_assessment(uploaded_file)
-
-    # Ensure the file was created before attempting download
-    if os.path.exists(output_file):
-        with open(output_file, "rb") as f:
-            st.download_button(
-                label="Download AI-Powered MPS Report",
-                data=f,
-                file_name="MPS_Assessment_Results.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+    if uploaded_file.size > 20 * 1024:
+        st.error("Error: The uploaded file exceeds the 20KB size limit. Please upload a smaller file.")
     else:
-        st.error("Error: The report could not be generated. Please check the processing function.")
+        st.write("Processing...")
+
+        # Process the file
+        output_file = process_mps_assessment(uploaded_file)
+
+        # Ensure the file was created before attempting download
+        if os.path.exists(output_file):
+            with open(output_file, "rb") as f:
+                st.download_button(
+                    label="Download AI-Powered MPS Report",
+                    data=f,
+                    file_name="MPS_Assessment_Results.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        else:
+            st.error("Error: The report could not be generated. Please check the processing function.")
+
