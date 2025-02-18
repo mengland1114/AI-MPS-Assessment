@@ -1,16 +1,11 @@
-import streamlit as st
-import pandas as pd
-import openai
-import os
-
-# Set up OpenAI API Key (Replace 'your-api-key' with your actual API key)
-openai.api_key = "your-api-key"
-
 # Function to process the uploaded Excel file
 def process_mps_assessment(uploaded_file):
     try:
         # Load the Excel file
         df = pd.read_excel(uploaded_file)
+
+        # Fill missing values with "N/A" to prevent errors
+        df.fillna("N/A", inplace=True)
 
         # Extract key columns (assuming standard FM Audit/NMAP format)
         columns_needed = ["Device Model", "Serial Number", "IP Address", "Type", "Mono AMV", "Color AMV", "Total AMV", "Status"]
@@ -52,17 +47,3 @@ def process_mps_assessment(uploaded_file):
 
     except Exception as e:
         return f"Error processing file: {e}"
-
-# Streamlit UI
-st.title("AI-Powered MPS Assessment Tool")
-st.write("Upload your FM Audit/NMAP Excel file and receive an AI-generated MPS assessment instantly.")
-
-uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
-
-if uploaded_file:
-    st.write("Processing...")
-
-    # Process the file
-    output_file = process_mps_assessment(uploaded_file)
-
-    # Ensure the file was created
