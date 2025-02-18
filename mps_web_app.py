@@ -4,7 +4,7 @@ import openai
 import os
 
 # Set Streamlit file size limit to 20KB
-st.set_option("server.maxUploadSize", 20)  # Set file size limit to 20KB
+
 
 # Set up OpenAI API Key
 openai.api_key = "your-api-key"
