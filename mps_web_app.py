@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import openai
+import os
 
 # Set up OpenAI API Key (Replace 'your-api-key' with your actual API key)
 openai.api_key = "your-api-key"
@@ -43,8 +44,8 @@ def process_mps_assessment(uploaded_file):
         # Add AI-generated assessments to the DataFrame
         df["AI Assessment"] = assessments
 
-        # Save the processed file
-        output_path = "MPS_Assessment_Results.xlsx"
+        # Save the processed file to Streamlit’s /tmp/ directory
+        output_path = "/tmp/MPS_Assessment_Results.xlsx"
         df.to_excel(output_path, index=False)
 
         return output_path
@@ -59,7 +60,3 @@ st.write("Upload your FM Audit/NMAP Excel file and receive an AI-generated MPS a
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 
 if uploaded_file:
-    st.write("Processing...")
-    output_file = process_mps_assessment(uploaded_file)
-    st.download_button(label="Download AI-Powered MPS Report", data=open(output_file, "rb"), file_name="MPS_Assessment_Results.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
