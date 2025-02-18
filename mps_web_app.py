@@ -15,28 +15,19 @@ def process_mps_assessment(uploaded_file):
         # Display detected column headers
         st.write("🔍 Detected Columns in File:", df.columns.tolist())
 
-        # Define required columns for analysis
-        required_columns = [
-            "Manufacturer", "Model", "Serial Number", "IP Address", "Mono AMV", "Color AMV", "Total AMV",
-            "Date Introduced", "Date Discontinued", "Speed Color", "Speed Mono", "Device Type",
-            "Monthly Duty Cycle", "MSRP", "Street Price", "Printer Status", "Firmware Version 1",
-            "Firmware Version 2", "Firmware Version 3", "Firmware Version 4", "Is Networked"
-        ]
-
-        # Ensure required columns exist
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        if missing_columns:
-            st.error(f"🚨 Error: Missing required columns - {missing_columns}")
+        # Ensure "Model" column exists and filter out blank rows
+        if "Model" not in df.columns:
+            st.error("🚨 Error: 'Model' column is missing!")
             return None
-
-        # Fill missing values with "N/A" to prevent errors
-        df.fillna("N/A", inplace=True)
 
         # Remove rows where "Model" is empty
         df = df[df["Model"].notna()]
 
         # Limit processing to first 500 valid devices for efficiency
         df = df.head(500)
+
+        # Fill missing values with "N/A" to prevent errors
+        df.fillna("N/A", inplace=True)
 
         # Generate AI-powered MPS assessment
         assessments = []
@@ -64,57 +55,4 @@ def process_mps_assessment(uploaded_file):
             - **Firmware Versions**: {row['Firmware Version 1']}, {row['Firmware Version 2']}, {row['Firmware Version 3']}, {row['Firmware Version 4']}
 
             Based on the provided data, analyze the device’s efficiency, cost implications, security risks, and recommend if the device should be retained, upgraded, or replaced.
-            """
-
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[{"role": "system", "content": "You are an expert in managed print services."},
-                          {"role": "user", "content": prompt}]
-            )
-
-            # Debugging AI Response
-            ai_response = response["choices"][0]["message"]["content"]
-            st.write(f"📝 AI Response for {row['Model']}: {ai_response}")
-
-            assessments.append(ai_response)
-
-        # Add AI-generated assessments to the DataFrame
-        df["AI Assessment"] = assessments
-
-        # Save the processed file
-        output_path = "/tmp/MPS_Assessment_Results.xlsx"
-        df.to_excel(output_path, index=False)
-
-        # Confirm where the file was saved
-        st.write(f"📂 Report saved at: {output_path}")
-
-        return output_path
-
-    except Exception as e:
-        st.error(f"🚨 Error processing file: {e}")
-        return None
-
-# Streamlit UI
-st.title("🖨 AI-Powered MPS Assessment Tool")
-st.write("📤 Upload your FM Audit/NMAP Excel file and receive an AI-generated MPS assessment instantly.")
-
-uploaded_file = st.file_uploader("📂 Upload Excel File", type=["xlsx"])
-
-if uploaded_file:
-    st.write("⚙ Processing...")
-
-    # Process the file
-    output_file = process_mps_assessment(uploaded_file)
-
-    # Check if the file exists before enabling download
-    if output_file and os.path.exists(output_file):
-        st.success(f"✅ Report successfully saved: {output_file}")
-        with open(output_file, "rb") as f:
-            st.download_button(
-                label="📥 Download AI-Powered MPS Report",
-                data=f,
-                file_name="MPS_Assessment_Results.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-    else:
-        st.error("🚨 Error: The report could not be generated. Please check the processing function.")
+        
