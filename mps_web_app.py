@@ -59,18 +59,10 @@ st.write("Upload your FM Audit/NMAP Excel file and receive an AI-generated MPS a
 
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 
-# Ensure correct indentation under `if uploaded_file:`
 if uploaded_file:
     st.write("Processing...")
 
     # Process the file
     output_file = process_mps_assessment(uploaded_file)
 
-    # Ensure the file was created before attempting download
-    if os.path.exists(output_file):
-        with open(output_file, "rb") as f:
-            st.download_button(
-                label="Download AI-Powered MPS Report",
-                data=f,
-                file_name="MPS_Assessment_Results.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.
+    # Ensure the file was created
